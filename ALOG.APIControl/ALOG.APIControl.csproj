@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="13.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.10" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.6.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <!-- <ItemGroup>
+    <Reference Include="ALOG.Enums">
+      <HintPath>../Dlls/ALOG.Enums.dll</HintPath>
+    </Reference>
+    <Reference Include="ALOG.Modelos">
+      <HintPath>../Dlls/ALOG.Modelos.dll</HintPath>
+    </Reference>
+    <Reference Include="ALOG.Repositorios">
+      <HintPath>../Dlls/ALOG.Repositorios.dll</HintPath>
+    </Reference>
+  </ItemGroup> -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\ALOG.Modelos\ALOG.Modelos.csproj" />
+    <ProjectReference Include="..\ALOG.Repositorios\ALOG.Repositorios.csproj" />
+    <ProjectReference Include="..\ALOG.Enums\ALOG.Enums.csproj" />
+  </ItemGroup>
+
+</Project>

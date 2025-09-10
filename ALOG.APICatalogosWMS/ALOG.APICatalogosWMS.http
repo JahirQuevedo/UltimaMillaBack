@@ -1,0 +1,6 @@
+@ALOG.APICatalogosWMS_HostAddress = http://localhost:5273
+
+GET {{ALOG.APICatalogosWMS_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

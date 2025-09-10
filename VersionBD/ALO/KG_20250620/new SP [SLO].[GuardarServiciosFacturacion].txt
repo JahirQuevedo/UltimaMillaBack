@@ -1,0 +1,261 @@
+USE [ALOgistic]
+GO
+/****** Object:  StoredProcedure [SLO].[GuardarServiciosFacturacion]    Script Date: 20/06/2025 09:20:44 a. m. ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER   PROCEDURE [SLO].[GuardarServiciosFacturacion]
+(
+	@Opcion INT,
+	@ReferenciaAlo VARCHAR(MAX),
+	@IdContenedor INT,
+	@Contenedor VARCHAR(MAX),
+	@BL VARCHAR(MAX),
+	@ClaveTipoContenedor VARCHAR(MAX),
+	@PatioId INT,
+	@Moneda VARCHAR(MAX),
+	@IdCatNaviera INT,
+	@IdEstadoContenedor INT,
+	@Activo BIT,
+	@IdCatServicio INT,
+	@IdEstadoServicio INT,
+	@Monto DOUBLE PRECISION,
+	@Cantidad DOUBLE PRECISION,
+	@IdCatClienteFacturar INT = 0,
+	@ReferenciaFacturacion VARCHAR(MAX) = NULL,
+	@IdPeticionContenedor INT OUTPUT,
+	@IdPeticionServicio INT OUTPUT,
+	@Respuesta VARCHAR(MAX) OUTPUT
+)
+AS
+
+BEGIN
+	DECLARE @IdServicioGenerado INT = 0;
+	DECLARE @ClienteRazonSocial VARCHAR(MAX) = '';
+	DECLARE @ClienteRFC VARCHAR(MAX) = '';
+	DECLARE @ClienteSolicitante VARCHAR(MAX) = '';
+	DECLARE @FechaSolDevolucion VARCHAR(MAX) = '';
+	DECLARE @FechaPagoGarantiaNav VARCHAR(MAX) = '';
+	DECLARE @FechaTocaPiso VARCHAR(MAX) = '';
+	DECLARE @FechaCierre VARCHAR(MAX) = '';
+	DECLARE @NavieraRFC VARCHAR(MAX) = '';
+	DECLARE @NavieraRazonSocial VARCHAR(MAX) = '';
+	DECLARE @Aduana VARCHAR(MAX) = '';
+	DECLARE @EstadoContenedor VARCHAR(MAX) = '';
+	DECLARE @DescServicio VARCHAR(MAX) = '';
+	DECLARE @EstadoServicio VARCHAR(MAX) = '';
+	DECLARE @IdCatClienteSolicitante INT = 0;
+	--DECLARE @IdCatClienteFacturar INT = 0;
+	DECLARE @IdCatAduana INT = 0;
+	DECLARE @IdReferencia INT = 0;
+	--DECLARE @ReferenciaFacturacion VARCHAR(MAX) = NULL;
+	DECLARE @RespuestaWS1G VARCHAR(MAX) = NULL;
+	DECLARE @Estado1G VARCHAR(MAX) = NULL;
+
+	SET @Respuesta = NULL;
+
+	SELECT
+		@RespuestaWS1G = JSON_VALUE(RespuestaWS1G, '$.mensaje'),
+		@Estado1G = Estado1G
+	FROM SLO.integracionReferencia
+	WHERE ReferenciaALO = @ReferenciaAlo
+
+	IF(@RespuestaWS1G IS NOT NULL AND @Estado1G != 'Procesado')
+	BEGIN
+		SET @Respuesta = 'Ocurrió el siguiente error con la referencia alo ' + @ReferenciaAlo + ' ' + @RespuestaWS1G;
+		RETURN;
+	END
+
+	SELECT
+		@IdCatAduana             = o.IdCatAduana,
+		@IdCatClienteSolicitante = o.IdCatCliente,
+		@IdReferencia            = pr.IdReferencia
+	FROM ordenes o
+	INNER JOIN [SLO].[peticionesReferencias] pr ON pr.IdOrden = o.IdOrden
+	--INNER JOIN [SLO].[integracionReferencia] ir ON ir.IdOrden = o.IdOrden
+	WHERE
+		o.ReferenciaALO = @ReferenciaAlo 
+		AND o.Activo = 1;
+		
+	IF(@IdCatAduana <= 0)
+	BEGIN
+		SET @Respuesta = 'No se encontró una aduana válida para la referencia alo ' + @ReferenciaAlo;
+		RETURN;
+	END
+
+	IF(@IdCatClienteSolicitante <= 0)
+	BEGIN
+		SET @Respuesta = 'No se encontró un cliente solicitante válido para la referencia alo ' + @ReferenciaAlo;
+		RETURN;
+	END
+
+	IF(@IdReferencia <= 0)
+	BEGIN
+		SET @Respuesta = 'No se encontró una petición de referencia para la referencia alo ' + @ReferenciaAlo;
+		RETURN;
+	END
+
+	--SELECT
+	--	@IdCatClienteFacturar = ClaveClienteExterno,
+	--	@ReferenciaFacturacion = ReferenciaClienteExterno
+	--FROM [SLO].[integracionReferencia]
+	--WHERE
+	--	ReferenciaALO = @ReferenciaAlo
+
+	SELECT
+		@Aduana = Aduana
+	FROM catAduana 
+	WHERE
+		IdCatAduana = @IdCatAduana
+		AND Activo  = 1
+	
+	IF(@Aduana = '')
+	BEGIN
+		SET @Respuesta = 'No se encontró una aduana válida para la referencia alo ' + @ReferenciaAlo;
+		RETURN;
+	END
+
+	IF(@IdCatClienteFacturar <= 0)
+	BEGIN
+		SET @Respuesta = 'No es un cliente a facturar valido para la referencia alo ' + @ReferenciaAlo;
+		RETURN;
+	END
+
+	IF(@ReferenciaFacturacion = '')
+	BEGIN
+		SET @Respuesta = 'La referencia alo ' + @ReferenciaAlo + ' no tiene una referencia de cliente asignada. No se puede generar la solicitud de factura.';
+		RETURN;
+	END
+
+	SET @Contenedor = IIF(@Contenedor = 'NA', '', @Contenedor);
+	SET @Bl = IIF(@Bl = 'NA', '', @Bl);
+
+	IF(@Contenedor != '')
+	BEGIN
+		SET @Contenedor = [Comun].[fn_ValidarFormatoContenedor](@Contenedor);
+	END
+
+	IF(@Contenedor IS NULL)
+	BEGIN
+		SET @Respuesta = 'El formato para el número de contenedor no es válido.';
+		RETURN;
+	END
+
+	SELECT
+		@IdContenedor = IdContenedor
+	FROM SLO.peticionesContenedores pc 
+	WHERE 
+		Contenedor       =  @Contenedor 
+		AND IdReferencia = @IdReferencia
+		AND BL           = @BL
+
+	IF(@IdContenedor > 0)
+	BEGIN
+		IF EXISTS (SELECT 1 FROM SLO.peticionesServicios WHERE IdContenedor = @IdContenedor AND IdCatServicio = @IdCatServicio AND Activo = 1)
+		BEGIN
+			SELECT @DescServicio = Descripcion FROM catServicios WHERE IdCatServicio = @IdCatServicio
+			SET @Respuesta = 'El servicio ' + @DescServicio + ' ya se encuentra asignado a la referencia alo ' + @ReferenciaAlo;
+			RETURN;
+		END
+		print '============================================================';
+		print 'Contenedor ['+ @Contenedor + ']';
+		print 'BL [' + @Bl + ']';
+		print '============================================================';
+		IF((@BL != ''))
+		BEGIN
+			print 'Entra al if para editar el bl'
+			BEGIN TRY
+				BEGIN TRANSACTION;
+				UPDATE [SLO].[peticionesContenedores] SET BL = @BL WHERE IdContenedor = @IdContenedor
+				COMMIT;
+			END TRY
+			BEGIN CATCH
+				ROLLBACK;
+			END CATCH
+		END
+
+		SET @IdPeticionContenedor = @IdContenedor;
+
+		EXEC [SLO].[CRUD_PeticionesServicios]
+			@Opcion,                -- @Opcion INT,
+			@IdCatServicio,         -- @IdCatServicio INT, 
+			@Monto,                 -- @Monto DOUBLE PRECISION,
+			@Cantidad,              -- @Cantidad DOUBLE PRECISION,
+			@DescServicio,          -- @DescServicio VARCHAR(MAX), 
+			@FechaCierre,           -- @FechaCierre VARCHAR(MAX), 
+			@IdPeticionContenedor,  -- @IdContenedor INT,   
+			@EstadoServicio,        -- @EstadoServicio VARCHAR(MAX), 
+			@IdEstadoServicio,      -- @IdEstadoServicio INT, 
+			@Activo,                -- @Activo INT, 
+			@IdCatClienteFacturar,  -- @IdClienteFacturarA INT,
+			@ReferenciaFacturacion, -- @ReferenciaFacturacion VARCHAR,
+			@IdReferencia,          -- @IdReferencia INT,
+			@IdCatServicio,         -- @IdServicio INT,
+			@Moneda,				-- @Moneda VARCHAR(MAX), 
+			@IdServicioGenerado = @IdPeticionServicio OUTPUT,
+			@Respuesta = @Respuesta OUTPUT
+		RETURN;
+	END
+
+	EXEC [SLO].[CRUD_peticionContenedores]
+		@Opcion,                 -- @Opcion INT,
+		@IdContenedor,           -- @IdContenedor INT,
+		@Contenedor,             -- @Contenedor VARCHAR(MAX), 
+		@ReferenciaFacturacion,  -- @RefenciaCliente VARCHAR(MAX),
+		@ClaveTipoContenedor,    -- @ClaveTipoContenedor VARCHAR(MAX),
+		@PatioId,                -- @PatioId INT,
+		NULL,                    -- @Patio_RazonSocial VARCHAR(MAX),
+		NULL,                    -- @Patio_RFC VARCHAR(MAX),
+		@Moneda,                 -- @Moneda VARCHAR(MAX),
+		@FechaTocaPiso,          -- @FechaTocaPiso VARCHAR(MAX),
+		@BL,                     -- @BL VARCHAR(MAX),
+		NULL,                    -- @Buque VARCHAR(MAX),
+		@IdCatClienteSolicitante,-- @ClienteId INT,
+		@ClienteRazonSocial,     -- @Cliente_RazonSocial VARCHAR(MAX),
+		@ClienteRFC,             -- @Cliente_RFC VARCHAR(MAX),
+		@ClienteSolicitante,     -- @Cliente_Solicitante VARCHAR(MAX),
+		@IdCatClienteSolicitante,-- @ConsignadoId INT,
+		NULL,                    -- @Consignado_RazonSocial VARCHAR(MAX),
+		NULL,                    -- @Consignado_RFC VARCHAR(MAX),
+		NULL,                    -- @FondoFinanciamiento VARCHAR(MAX),
+		0,                       -- @MontoSolicitud DOUBLE PRECISION,
+		0,                       -- @MontoTotal DOUBLE PRECISION,
+		@IdCatAduana,            -- @AduanaId INT,
+		@IdCatAduana,            -- @catAduanaIdCatAduana INT,
+		@FechaSolDevolucion,     -- @FechaSolDevolucion VARCHAR(MAX),
+		@FechaPagoGarantiaNav,   -- @FechaPagoGarantiaNav VARCHAR(MAX),
+		@NavieraRFC,             -- @Naviera_RFC VARCHAR(MAX),
+		@IdCatNaviera,           -- @Naviera_Id INT,
+		@NavieraRazonSocial,     -- @Naviera_RazonSocial VARCHAR(MAX),
+		@Aduana,                 -- @Aduana VARCHAR(MAX),
+		@IdReferencia,           -- @IdReferencia INT,
+		NULL,                    -- @FechaCierre VARCHAR(MAX),
+		@EstadoContenedor,       -- @EstadoContenedor VARCHAR(MAX),
+		@IdEstadoContenedor,     -- @IdEstadoContenedor INT,
+		@Activo,                 -- @Activo BIT,
+		@ReferenciaFacturacion,  -- @ReferenciaFacturacion VARCHAR(MAX),
+		@IdCatClienteFacturar,   -- @IdClienteFacturarA INT,
+		@IdPeticionContenedor = @IdPeticionContenedor OUTPUT,
+		@Respuesta = @Respuesta OUTPUT
+
+	EXEC [SLO].[CRUD_PeticionesServicios]
+		@Opcion,                -- @Opcion INT,
+		@IdCatServicio,         -- @IdCatServicio INT, 
+		@Monto,                 -- @Monto DOUBLE PRECISION,
+		@Cantidad,              -- @Cantidad DOUBLE PRECISION,
+		@DescServicio,          -- @DescServicio VARCHAR(MAX), 
+		@FechaCierre,           -- @FechaCierre VARCHAR(MAX), 
+		@IdPeticionContenedor,  -- @IdContenedor INT,   
+		@EstadoServicio,        -- @EstadoServicio VARCHAR(MAX), 
+		@IdEstadoServicio,      -- @IdEstadoServicio INT, 
+		@Activo,                -- @Activo INT, 
+		@IdCatClienteFacturar,  -- @IdClienteFacturarA INT,
+		@ReferenciaFacturacion, -- @ReferenciaFacturacion VARCHAR,
+		@IdReferencia,          -- @IdReferencia INT,
+		@IdCatServicio,         -- @IdServicio INT,
+		@Moneda,				-- @Moneda VARCHAR(MAX),
+		@IdServicioGenerado = @IdPeticionServicio OUTPUT,
+		@Respuesta = @Respuesta OUTPUT
+
+END

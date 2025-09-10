@@ -1,0 +1,111 @@
+USE [ALOgistic]
+GO
+/****** Object:  StoredProcedure [SLO].[CRUD_PeticionesServicios]    Script Date: 20/06/2025 09:18:52 a. m. ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER   PROCEDURE [SLO].[CRUD_PeticionesServicios]
+(	
+	@Opcion INT,
+	@IdCatServicio INT, 
+	@Monto DOUBLE PRECISION,
+	@Cantidad DOUBLE PRECISION,
+	@DescServicio VARCHAR(MAX), 
+	@FechaCierre VARCHAR(MAX), 
+	@IdContenedor INT,   
+	@EstadoServicio VARCHAR(MAX), 
+	@IdEstadoServicio INT, 
+	@Activo INT, 
+	@IdClienteFacturarA INT,
+	@ReferenciaFacturacion VARCHAR(MAX),
+	@IdReferencia INT,
+	@IdServicio INT,
+	@Moneda VARCHAR(MAX),
+	@IdServicioGenerado INT OUTPUT,
+	@Respuesta VARCHAR(MAX) OUTPUT
+)
+AS
+
+BEGIN
+
+	DECLARE @dFechaCierre DATETIME;
+	print 'Buscando el contenedor con número de Id [' + cast(@IdContenedor as varchar(max))+']';
+	SET @IdContenedor = IIF(@IdContenedor = 0, NULL, @IdContenedor);
+
+	IF NOT EXISTS(SELECT 1 FROM catServicios
+	WHERE
+		IdCatServicio = @IdCatServicio
+		AND Activo = 1)
+	BEGIN
+		SET @Respuesta = 'No se encontró un servicio válido con el id [' + CAST(@IdCatServicio AS VARCHAR(MAX)) + ']';
+		RETURN;
+	END
+	
+	IF NOT EXISTS(SELECT 1 FROM [SLO].[peticionesContenedores]
+	WHERE
+		IdContenedor = @IdContenedor
+		AND Activo = 1)
+	BEGIN
+		SET @Respuesta = 'El contenedor no está registrado en el sistema';
+		RETURN;
+	END
+
+	IF(@Monto <= 0)
+	BEGIN
+		SET @Respuesta = 'El monto no puedo ser menor a cero';
+		RETURN;
+	END
+
+	IF(@Cantidad <= 0)
+	BEGIN
+		SET @Respuesta = 'La cantidad no puedo ser menor a cero';
+		RETURN;
+	END
+
+	BEGIN TRY
+		BEGIN TRANSACTION;
+	-- Bloque para insertar en la tabla peticionServicios
+		IF(@Opcion = 1)
+		BEGIN
+			SET @IdEstadoServicio = 1;
+			SET @Activo = 1;
+
+			SET @IdContenedor = IIF(@IdContenedor = 0, NULL, @IdContenedor);
+			Print '@IdReferencia ' + cast(@IdReferencia as varchar(max));
+			INSERT INTO [SLO].[peticionesServicios]
+			(IdCatServicio,  Monto,  Cantidad,  DescServicio,  FechaRegistro, FechaCierre,   IdContenedor,  EstadoServicio,  IdEstadoServicio,  Activo,  IdClienteFacturarA,   ReferenciaClienteFactura,   Moneda) VALUES
+			(@IdCatServicio, @Monto, @Cantidad, @DescServicio, GETDATE(),     @dFechaCierre, @IdContenedor, @EstadoServicio, @IdEstadoServicio, @Activo, @IdClienteFacturarA,   @ReferenciaFacturacion,    @Moneda);
+	
+			SET @IdServicioGenerado = SCOPE_IDENTITY();
+		END
+
+		IF(@Opcion = 3)
+		BEGIN
+			UPDATE [SLO].[peticionesServicios] SET
+				IdCatServicio      = @IdCatServicio,
+				Monto              = @Monto,
+				Cantidad           = @Cantidad,
+				DescServicio       = @DescServicio,
+				FechaCierre        = @dFechaCierre,
+				IdContenedor       = @IdContenedor,
+				EstadoServicio     = @EstadoServicio,
+				--IdEstadoServicio   = @IdEstadoServicio,
+				--Activo             = @Activo,
+				IdClienteFacturarA = @IdClienteFacturarA,
+		  ReferenciaClienteFactura = @ReferenciaFacturacion,
+							Moneda = @Moneda
+			WHERE
+				IdServicio = @IdServicio
+				AND Activo = 1
+			SET @IdServicioGenerado = @IdServicio;
+		END
+
+		COMMIT;
+	END TRY
+	BEGIN CATCH
+		SET @Respuesta = ERROR_MESSAGE();
+		ROLLBACK;
+	END CATCH
+	
+END

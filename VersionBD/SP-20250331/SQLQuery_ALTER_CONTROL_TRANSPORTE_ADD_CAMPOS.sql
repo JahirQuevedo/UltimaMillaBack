@@ -1,0 +1,87 @@
+IF NOT EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'sNombreOperador'
+          AND Object_ID = Object_ID(N'WMS.WMS_024_CONTROL_TRANSPORTE'))
+BEGIN
+
+    ALTER TABLE [WMS].[WMS_024_CONTROL_TRANSPORTE] ADD sNombreOperador VARCHAR(350) NULL;
+    
+END
+
+IF NOT EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'sPlacas'
+          AND Object_ID = Object_ID(N'WMS.WMS_024_CONTROL_TRANSPORTE'))
+BEGIN
+
+    ALTER TABLE [WMS].[WMS_024_CONTROL_TRANSPORTE] ADD sPlacas VARCHAR(25) NULL;
+    
+END
+
+IF NOT EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'sPlacasPlana1'
+          AND Object_ID = Object_ID(N'WMS.WMS_024_CONTROL_TRANSPORTE'))
+BEGIN
+
+    ALTER TABLE [WMS].[WMS_024_CONTROL_TRANSPORTE] ADD sPlacasPlana1 VARCHAR(25) NULL;
+    
+END
+
+IF NOT EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'sPlacasPlana2'
+          AND Object_ID = Object_ID(N'WMS.WMS_024_CONTROL_TRANSPORTE'))
+BEGIN
+
+    ALTER TABLE [WMS].[WMS_024_CONTROL_TRANSPORTE] ADD sPlacasPlana2 VARCHAR(25) NULL;
+    
+END
+
+IF NOT EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'sNumeroEconomico'
+          AND Object_ID = Object_ID(N'WMS.WMS_024_CONTROL_TRANSPORTE'))
+BEGIN
+
+    ALTER TABLE [WMS].[WMS_024_CONTROL_TRANSPORTE] ADD sNumeroEconomico VARCHAR(10) NULL;
+    
+END
+
+IF NOT EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'bEsLocal'
+          AND Object_ID = Object_ID(N'WMS.WMS_024_CONTROL_TRANSPORTE'))
+BEGIN
+
+    ALTER TABLE [WMS].[WMS_024_CONTROL_TRANSPORTE] ADD bEsLocal BIT NULL;
+    
+END
+
+IF NOT EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'sTerminalOrigen'
+          AND Object_ID = Object_ID(N'WMS.WMS_024_CONTROL_TRANSPORTE'))
+BEGIN
+
+    ALTER TABLE [WMS].[WMS_024_CONTROL_TRANSPORTE] ADD sTerminalOrigen VARCHAR(250) NULL;
+    
+END
+
+IF NOT EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'sTerminalDestino'
+          AND Object_ID = Object_ID(N'WMS.WMS_024_CONTROL_TRANSPORTE'))
+BEGIN
+
+    ALTER TABLE [WMS].[WMS_024_CONTROL_TRANSPORTE] ADD sTerminalDestino VARCHAR(250) NULL;
+    
+END
+
+IF NOT EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'nIdCatTransportista'
+          AND Object_ID = Object_ID(N'WMS.WMS_024_CONTROL_TRANSPORTE'))
+BEGIN
+
+    ALTER TABLE [WMS].[WMS_024_CONTROL_TRANSPORTE] ADD nIdCatTransportista INT NULL;
+
+    ALTER TABLE [WMS].[WMS_024_CONTROL_TRANSPORTE]  WITH CHECK ADD  CONSTRAINT [FK_WMS_024_CONTROL_TRANSPORTE_CatTransportistas_nIdCatTransportista] FOREIGN KEY([nIdCatTransportista])
+    REFERENCES [dbo].[catTransportistas] ([IdCatTransportista])
+    ON DELETE CASCADE
+
+    ALTER TABLE [WMS].[WMS_024_CONTROL_TRANSPORTE] CHECK CONSTRAINT [FK_WMS_024_CONTROL_TRANSPORTE_CatTransportistas_nIdCatTransportista]
+
+
+END

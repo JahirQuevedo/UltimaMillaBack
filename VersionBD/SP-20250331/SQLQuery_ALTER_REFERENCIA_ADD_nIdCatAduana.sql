@@ -1,0 +1,16 @@
+
+
+IF NOT EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'nIdCatAduana'
+          AND Object_ID = Object_ID(N'WMS.WMS_001_REFERENCIA'))
+BEGIN
+
+    ALTER TABLE [WMS].[WMS_001_REFERENCIA] ADD nIdCatAduana INT NULL;
+
+    ALTER TABLE [WMS].[WMS_001_REFERENCIA]  WITH CHECK ADD  CONSTRAINT [FK_WMS_001_REFERENCIA_CatAduana_nIdCatAduana] FOREIGN KEY([nIdCatAduana])
+    REFERENCES [dbo].[catAduana] ([IdCatAduana]);
+
+    ALTER TABLE [WMS].[WMS_001_REFERENCIA] CHECK CONSTRAINT [FK_WMS_001_REFERENCIA_CatAduana_nIdCatAduana];
+
+END
+

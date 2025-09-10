@@ -1,0 +1,5 @@
+ALTER TABLE SLO.peticionesServicios
+ADD ReferenciaClienteFactura VARCHAR(MAX) NULL;
+
+ALTER TABLE SLO.peticionesServicios
+ADD Moneda nvarchar(MAX) NULL;

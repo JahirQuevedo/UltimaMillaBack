@@ -1,0 +1,90 @@
+--CAMBIOS 16-03-2025
+
+ALTER TABLE ALOgistic.dbo.catUsuarios ADD CONSTRAINT catUsuarios_unique UNIQUE (Usuario);
+ALTER TABLE ALOgistic.dbo.catUsuarios ALTER COLUMN RFC nvarchar(20) COLLATE Modern_Spanish_CI_AS NULL;
+ALTER TABLE ALOgistic.dbo.catUsuarios ADD FechaNacimiento datetime2 NULL;
+-- NUEVA TABLA
+
+USE [ALOgistic]
+GO
+
+/****** Object:  Table [dbo].[catUsuariosClientes]    Script Date: 17/03/2025 11:06:58 p. m. ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[catUsuariosClientes](
+	[IdCatUsuarioCliente] [int] IDENTITY(1,1) NOT NULL,
+	[IdCatUsuario] [int] NOT NULL,
+	[IdCatCliente] [int] NOT NULL,
+	[Activo] [bit] NOT NULL,
+	[FechaRegistro] [datetime2](7) NOT NULL,
+	[IdUsuarioRegistro] [int] NOT NULL
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[catUsuariosClientes] ADD  CONSTRAINT [DF_catUsuarioCliente_FechaRegistro]  DEFAULT (getdate()) FOR [FechaRegistro]
+GO
+
+ALTER TABLE [dbo].[catUsuariosClientes]  WITH CHECK ADD  CONSTRAINT [FK_catUsuariosClientes_catClientes] FOREIGN KEY([IdCatCliente])
+REFERENCES [dbo].[catClientes] ([IdCatCliente])
+GO
+
+ALTER TABLE [dbo].[catUsuariosClientes] CHECK CONSTRAINT [FK_catUsuariosClientes_catClientes]
+GO
+
+ALTER TABLE [dbo].[catUsuariosClientes]  WITH CHECK ADD  CONSTRAINT [FK_catUsuariosClientes_catUsuarios] FOREIGN KEY([IdCatUsuario])
+REFERENCES [dbo].[catUsuarios] ([IdCatUsuarios])
+GO
+
+ALTER TABLE [dbo].[catUsuariosClientes] CHECK CONSTRAINT [FK_catUsuariosClientes_catUsuarios]
+GO
+
+ALTER TABLE [dbo].[catUsuariosClientes]  WITH CHECK ADD  CONSTRAINT [FK_catUsuariosClientes_catUsuarios1] FOREIGN KEY([IdUsuarioRegistro])
+REFERENCES [dbo].[catUsuarios] ([IdCatUsuarios])
+GO
+
+ALTER TABLE [dbo].[catUsuariosClientes] CHECK CONSTRAINT [FK_catUsuariosClientes_catUsuarios1]
+GO
+
+
+--
+ALTER TABLE ALOgistic.dbo.peticionesContenedores ALTER COLUMN Naviera_RFC nvarchar(MAX) COLLATE Modern_Spanish_CI_AS NULL;
+
+ALTER TABLE ALOgistic.dbo.peticionesContenedores ALTER COLUMN FechaPagoGarantiaNav datetime2 NULL;
+ALTER TABLE ALOgistic.dbo.peticionesContenedores ALTER COLUMN FechaSolDevolucion datetime2 NULL;
+ALTER TABLE ALOgistic.dbo.peticionesContenedores ALTER COLUMN FechaTocaPiso datetime2 NULL;
+-----
+
+ALTER TABLE ALOgistic.dbo.peticionesReferencias ADD  DEFAULT 'N' FOR Procesado;
+ALTER TABLE ALOgistic.dbo.peticionesReferencias ALTER COLUMN Procesado nvarchar(MAX) COLLATE Modern_Spanish_CI_AS NOT NULL;
+
+
+--
+
+ALTER TABLE ALOgistic.dbo.catUsuariosPermisos ADD  DEFAULT getdate() FOR FechaRegistro;
+ALTER TABLE ALOgistic.dbo.catUsuariosPermisos ADD  DEFAULT 1 FOR Crear;
+ALTER TABLE ALOgistic.dbo.catUsuariosPermisos ADD  DEFAULT 1 FOR Guardar;
+ALTER TABLE ALOgistic.dbo.catUsuariosPermisos ADD  DEFAULT 1 FOR Actualizar;
+ALTER TABLE ALOgistic.dbo.catUsuariosPermisos ADD  DEFAULT 0 FOR Eliminar;
+ALTER TABLE ALOgistic.dbo.catUsuariosPermisos ADD  DEFAULT 1 FOR Impresion;
+ALTER TABLE ALOgistic.dbo.catUsuariosPermisos ADD  DEFAULT 1 FOR Exportar;
+ALTER TABLE ALOgistic.dbo.catUsuariosPermisos ADD  DEFAULT 0 FOR Notificar;
+ALTER TABLE ALOgistic.dbo.catUsuariosPermisos ADD  DEFAULT 0 FOR Autorizar;
+ALTER TABLE ALOgistic.dbo.catUsuariosPermisos ADD  DEFAULT 0 FOR Enviar;
+ALTER TABLE ALOgistic.dbo.catUsuariosPermisos ADD  DEFAULT 1 FOR Activo;
+
+
+
+DROP INDEX IX_peticionesContenedores_catAduanaIdCatAduana ON ALOgistic.dbo.peticionesContenedores;
+ALTER TABLE ALOgistic.dbo.peticionesContenedores DROP COLUMN catAduanaIdCatAduana;
+
+
+ALTER TABLE ALOgistic.dbo.peticionesContenedores DROP CONSTRAINT FK_peticionesContenedores_catAduana_catAduanaIdCatAduana;
+ALTER TABLE ALOgistic.dbo.peticionesContenedores DROP COLUMN catAduanaIdCatAduana;
+
+
+
+

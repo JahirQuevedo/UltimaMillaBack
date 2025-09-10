@@ -1,0 +1,9 @@
+-- Agregar la nueva columna de tipo INT
+ALTER TABLE SLO.integracionFacturaDet
+ADD Idpservicios INT NULL;
+
+-- Agregar la llave foránea que referencia la columna 'id' de la misma tabla.
+ALTER TABLE SLO.integracionFacturaDet
+ADD CONSTRAINT FK_PeticionesServicios_Idpservicios
+FOREIGN KEY (Idpservicios)
+REFERENCES SLO.peticionesServicios(IdServicio);

@@ -1,0 +1,138 @@
+USE [ALOgistic]
+GO
+/****** Object:  StoredProcedure [Comun].[InsertarOrdenes]    Script Date: 20/06/2025 09:20:21 a. m. ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ 
+/*
+ObtenerFormatoReferenciaAlo()
+CRUD_Ordenes(referenciaALo);
+ 
+*/
+ALTER   PROCEDURE [Comun].[InsertarOrdenes]
+(	
+	@IdCatCliente         INT,
+	--@IdCatClienteFacturar INT,
+	@IdCatAduana          INT,
+	@IdCatEmpresa         INT,
+	@IdCatLineaNegocio    INT,
+	@IdCatProyecto        INT = null,
+	@IdUsuario            INT,
+	@ReferenciaAlo        VARCHAR(MAX),
+	--@ReferenciaCliente    VARCHAR(MAX),
+	@IdOrdenGenerada      INT OUTPUT,
+	@MensajesErrore       VARCHAR(MAX) OUTPUT
+)
+AS
+ 
+BEGIN
+	DECLARE @dFechaCierre DATETIME2(7);
+	DECLARE @Ref VARCHAR(MAX) = NULL;
+	DECLARE @Activo BIT = 0;
+	DECLARE @ReferenciaEnviada1G INT = 0;
+	DECLARE @ExisteSolicitudFactura1G INT = 0;
+	-- Variables para enviar la referencia a 1G
+	DECLARE @IdIntReferencia INT = 0;
+	DECLARE @IdIntReferenciaGenerada INT = 0;
+	DECLARE @sIdCompaniaExterna VARCHAR(MAX);
+	DECLARE @sIdCatClienteFactura VARCHAR(MAX);
+	DECLARE @Aduana VARCHAR(MAX) = NULL;
+ 
+	SET @MensajesErrore = NULL;
+ 
+	-- =============================[ INICIO DE SECCIÓN DE VALIDACIONES ] =============================
+ 
+	IF NOT EXISTS (SELECT 1 FROM catClientes WHERE IdCatCliente = @IdCatCliente AND Activo = 1)
+	BEGIN
+		SET @MensajesErrore = 'El cliente solicitante no es válido. Intenta nuevamente, por favor';
+		RETURN;
+	END
+ 
+	--IF NOT EXISTS (SELECT 1 FROM catClientes WHERE IdCatCliente = @IdCatClienteFacturar AND Activo = 1)
+	--BEGIN
+	--	SET @MensajesErrore = 'El cliente a facturar no es válido. Intenta nuevamente, por favor';
+	--	RETURN;
+	--END
+ 
+	--IF EXISTS (SELECT 1 FROM SLO.integracionReferencia WHERE ReferenciaALO = @ReferenciaAlo)
+	--BEGIN
+	--	SELECT @sIdCatClienteFactura = ClaveClienteExterno FROM SLO.integracionReferencia WHERE ReferenciaALO = @ReferenciaAlo AND Enviado = 1
+	--	IF(@IdCatClienteFacturar != @sIdCatClienteFactura)
+	--	BEGIN
+	--		SET @MensajesErrore = 'La referencia alo ' + @ReferenciaAlo + ' ya fue enviada a 1G. No se puede editar el cliente.'
+	--		RETURN;
+	--	END
+	--END
+ 
+	--IF EXISTS (SELECT 1 FROM SLO.integracionReferencia WHERE ReferenciaClienteExterno = @ReferenciaCliente)
+	--BEGIN
+	--	DECLARE @RefAlo VARCHAR(MAX);
+	--	SELECT @RefAlo = ReferenciaALO FROM SLO.integracionReferencia WHERE ReferenciaClienteExterno = @ReferenciaCliente
+	--	IF(@RefAlo != @ReferenciaAlo)
+	--	BEGIN
+	--		SET @MensajesErrore = 'La referencia del cliente ' + @ReferenciaCliente + ' ya está registrada en el sistema.';
+	--		RETURN;
+	--	END
+	--END
+ 
+	SELECT @Aduana = Aduana FROM catAduana WHERE IdCatAduana = @IdCatAduana AND Activo = 1;
+ 
+	IF @Aduana IS NULL
+	BEGIN
+		SET @MensajesErrore = 'No se encontró una aduana válida en el sistema para generar la referencia alo.';
+		SET @IdOrdenGenerada = 0;
+		RETURN;
+	END
+	-- =============================[ FIN DE SECCIÓN DE VALIDACIONES ] =============================
+	BEGIN TRY
+		BEGIN TRANSACTION;
+ 
+		INSERT INTO ordenes
+		(IdCatCliente,  IdCatSistema,  IdCatAduana,  IdCatEmpresa,  IdCatSucursal,  IdCatLineaNegocio,  IdCatProyecto,  IdUsuario,  FechaCierre,   IdEstadoOrden,  ReferenciaALO) VALUES
+		(@IdCatCliente, 1,             @IdCatAduana, @IdCatEmpresa, 1,              @IdCatLineaNegocio, @IdCatProyecto, @IdUsuario, NULL,          5,              @ReferenciaAlo)
+ 
+		SET @IdOrdenGenerada = SCOPE_IDENTITY();
+		print '@IdOrdenGenerada => ' + cast(@IdOrdenGenerada as varchar(max));
+ 
+		IF(@IdOrdenGenerada <= 0)
+		BEGIN
+			ROLLBACK;
+			SET @MensajesErrore = 'No se pudo generar la orden de servicio para la referencia alo ' + @ReferenciaAlo;
+			RETURN;
+		END
+		ELSE
+		BEGIN
+			COMMIT;
+		END
+ 
+		--SET @IdCatEmpresa += 1;
+ 
+		--SET @sIdCompaniaExterna = CAST(@IdCatEmpresa AS VARCHAR(MAX));
+		--SET @sIdCatClienteFactura = CAST(@IdCatClienteFacturar AS VARCHAR(MAX));
+
+ 
+		--EXEC [SLO].[CRUD_integracionReferencia]
+		--	1, 				        -- @Opcion					 : INT     : NOT NULL
+		--	@IdIntReferencia,	    -- @IdIntReferencia			 : INT     : NOT NULL
+		--	@IdOrdenGenerada, 		-- @IdOrden					 : INT     : NOT NULL
+		--	@sIdCompaniaExterna,    -- @IdCompaniaExterna		 : VARCHAR : NOT NULL
+		--	@ReferenciaAlo,	        -- @ReferenciaALO			 : VARCHAR : NOT NULL
+		--	@ReferenciaCliente,	    -- @ReferenciaClienteExterno : VARCHAR : NOT NULL
+		--	@sIdCatClienteFactura,	-- @ClaveClienteExterno		 : INT     : NOT NULL
+		--	@Aduana,				-- @Aduana					 : VARCHAR : NOT NULL
+		--	@Activo,				-- @Activo					 : INT     : NOT NULL
+		--	NULL,				    -- @FechaEnvio				 : VARCHAR : NOT NULL
+		--	0,					    -- @Enviado					 : INT     : NOT NULL
+		--	NULL,					-- @Estado1G				 : VARCHAR : NULL
+		--	NULL,			        -- @RespuestaWS1G			 : VARCHAR : NULL
+		--	@IdIntegracionReferencia = @IdIntReferenciaGenerada OUTPUT -- @IdIntegracionReferencia  : INT : NOT NULL
+ 
+		
+	END TRY
+	BEGIN CATCH
+		SET @MensajesErrore = ERROR_MESSAGE();
+		ROLLBACK;
+	END CATCH
+END

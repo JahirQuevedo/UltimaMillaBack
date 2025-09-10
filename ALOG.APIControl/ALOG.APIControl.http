@@ -1,0 +1,6 @@
+@ALOG.APIControl_HostAddress = http://localhost:5219
+
+GET {{ALOG.APIControl_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

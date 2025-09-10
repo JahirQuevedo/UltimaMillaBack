@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!--<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="&#xD;&#xA;xcopy &quot;$(TargetDir)\*.dll&quot; &quot;C:\Github\ApiVacios\Dlls&quot; /Y" />
+  </Target>-->
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec Command="if not exist &quot;$(SolutionDir)Dlls&quot; mkdir &quot;$(SolutionDir)Dlls&quot;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Dlls&quot;" />
+	</Target>
+
+  <!-- <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="mkdir -p $(SolutionDir)Dlls" />
+    <Exec Command="cp -rf $(TargetPath) $(SolutionDir)Dlls" />
+  </Target> -->
+
+</Project>

@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <!-- <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="mkdir -p $(SolutionDir)Dlls" />
+    <Exec Command="cp -rf $(TargetPath) $(SolutionDir)Dlls" />
+  </Target> -->
+  <ItemGroup>
+
+    <PackageReference Include="ICSharpCode.SharpZipLib.dll" Version="0.85.4.369" />
+
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
+
+    <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.17" />
+
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.6">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.2.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.2.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.6" />
+    <PackageReference Include="SharpZipLib" Version="1.4.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ALOG.Enums\ALOG.Enums.csproj" />
+  </ItemGroup>
+  <!--<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy &quot;$(TargetDir)\*.dll&quot; &quot;C:\Github\ApiVacios\Dlls&quot; /Y" />
+  </Target>-->
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec Command="if not exist &quot;$(SolutionDir)Dlls&quot; mkdir &quot;$(SolutionDir)Dlls&quot;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Dlls&quot;" />
+	</Target>
+</Project>

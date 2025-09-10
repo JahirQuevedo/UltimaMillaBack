@@ -1,0 +1,6 @@
+@ALOG.APIFacturacion_HostAddress = http://localhost:5287
+
+GET {{ALOG.APIFacturacion_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

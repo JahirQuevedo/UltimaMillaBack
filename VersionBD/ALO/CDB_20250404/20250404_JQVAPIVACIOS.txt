@@ -1,0 +1,77 @@
+INSERT INTO ALOgistic.dbo.catReferenciaEstado (Nombre,Descripcion,Clave,Activo,FechaRegistro,IdUsuarioRegistro)
+	VALUES (N'PENDIENTE',N'Pendiente',N'PE',1,'2025-04-04 ',1);
+UPDATE ALOgistic.dbo.catReferenciaEstado
+	SET Nombre=N'ABIERTO'
+	WHERE IdCatReferenciaEstado=1;
+UPDATE ALOgistic.dbo.catReferenciaEstado
+	SET Nombre=N'EN PROCESO'
+	WHERE IdCatReferenciaEstado=4;
+UPDATE ALOgistic.dbo.catReferenciaEstado
+	SET Nombre=N'TERMINADO'
+	WHERE IdCatReferenciaEstado=5;
+UPDATE ALOgistic.dbo.catReferenciaEstado
+	SET Nombre=N'CANCELADO'
+	WHERE IdCatReferenciaEstado=6;
+
+-------------
+-------------
+
+-- Auto-generated SQL script. Actual values for binary/complex data types may differ - what you see is the default string representation of values.
+INSERT INTO ALOgistic.dbo.catTipoEstados (Nombre,TipoEstado,Activo,FechaRegistro)
+	VALUES (N'PENDIENTE',N'PE',1,'2025-04-04');
+UPDATE ALOgistic.dbo.catTipoEstados
+	SET Nombre=N'ABIERTO'
+	WHERE IdCatTipoEstados=1;
+UPDATE ALOgistic.dbo.catTipoEstados
+	SET Nombre=N'EN PROCESO'
+	WHERE IdCatTipoEstados=2;
+UPDATE ALOgistic.dbo.catTipoEstados
+	SET Nombre=N'TERMINADO'
+	WHERE IdCatTipoEstados=3;
+UPDATE ALOgistic.dbo.catTipoEstados
+	SET Nombre=N'CANCELADO'
+	WHERE IdCatTipoEstados=4;
+	
+	
+------------------
+
+ALTER TABLE ALOgistic.dbo.peticionesServicios ALTER COLUMN FechaCierre datetime2 NULL;
+
+-------------------
+
+ALTER TABLE ALOgistic.dbo.peticionesContenedores ALTER COLUMN ConsignadoId int NULL;
+ALTER TABLE ALOgistic.dbo.peticionesContenedores ALTER COLUMN MontoSolicitud float NULL;
+ALTER TABLE ALOgistic.dbo.peticionesContenedores ALTER COLUMN MontoTotal float NULL;
+ALTER TABLE ALOgistic.dbo.peticionesContenedores ALTER COLUMN Naviera_RazonSocial nvarchar(MAX) COLLATE Modern_Spanish_CI_AS NULL;
+
+
+------------------------
+ALTER TABLE ALOgistic.dbo.peticionesContenedores ADD BuqueViaje int NULL;
+EXEC ALOgistic.sys.sp_addextendedproperty 'MS_Description', N'Viaje asignado al buque en el puerto.', 'schema', N'dbo', 'table', N'peticionesContenedores', 'column', N'BuqueViaje';
+
+-----------------
+
+ALTER TABLE ALOgistic.dbo.peticionesContenedores DROP CONSTRAINT FK_peticionesContenedores_catAduana_catAduanaIdCatAduana;
+ALTER TABLE ALOgistic.dbo.peticionesContenedores DROP COLUMN catAduanaIdCatAduana;
+
+
+-----------------
+DROP INDEX IX_peticionesContenedores_catAduanaIdCatAduana ON ALOgistic.dbo.peticionesContenedores;
+
+
+ALTER TABLE ALOgistic.dbo.peticionesContenedores DROP COLUMN catAduanaIdCatAduana;
+
+--------------------
+
+
+ALTER TABLE ALOgistic.dbo.peticionesReferencias ALTER COLUMN Transporte_RFC nvarchar(MAX) COLLATE Modern_Spanish_CI_AS NULL;
+ALTER TABLE ALOgistic.dbo.peticionesReferencias ALTER COLUMN Transporte_RazonSocial nvarchar(MAX) COLLATE Modern_Spanish_CI_AS NULL;
+ALTER TABLE ALOgistic.dbo.peticionesReferencias ALTER COLUMN TrasporteId int NULL;
+ALTER TABLE ALOgistic.dbo.peticionesReferencias ALTER COLUMN Transporte_Usuario nvarchar(MAX) COLLATE Modern_Spanish_CI_AS NULL;
+ALTER TABLE ALOgistic.dbo.peticionesReferencias ALTER COLUMN Transporte_UsuarioEmail nvarchar(MAX) COLLATE Modern_Spanish_CI_AS NULL;
+ALTER TABLE ALOgistic.dbo.peticionesReferencias ALTER COLUMN Ticket int NULL;
+
+--------------------
+
+DROP INDEX IX_peticionesReferencias_Ticket ON ALOgistic.dbo.peticionesReferencias;
+

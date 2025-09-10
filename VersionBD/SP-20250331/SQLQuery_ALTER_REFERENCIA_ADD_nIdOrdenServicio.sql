@@ -1,0 +1,15 @@
+
+IF NOT EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'nIdOrdenServicio'
+          AND Object_ID = Object_ID(N'WMS.WMS_001_REFERENCIA'))
+BEGIN
+
+    ALTER TABLE [WMS].[WMS_001_REFERENCIA] ADD nIdOrdenServicio INT NULL;
+
+    ALTER TABLE [WMS].[WMS_001_REFERENCIA]  WITH CHECK ADD  CONSTRAINT [FK_WMS_001_REFERENCIA_Ordenes_nIdOrdenServicio] FOREIGN KEY([nIdOrdenServicio])
+    REFERENCES [dbo].[ordenes] ([IdOrden])
+
+    ALTER TABLE [WMS].[WMS_001_REFERENCIA] CHECK CONSTRAINT [FK_WMS_001_REFERENCIA_Ordenes_nIdOrdenServicio]
+
+END
+

@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NPOI" Version="2.7.1" />
+    <PackageReference Include="QRCoder-ImageSharp" Version="0.10.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ALOG.Enums\ALOG.Enums.csproj" />
+    <ProjectReference Include="..\ALOG.Modelos\ALOG.Modelos.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="QR/" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="if not exist &quot;$(SolutionDir)Dlls&quot; mkdir &quot;$(SolutionDir)Dlls&quot;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Dlls&quot;" />
+  </Target>
+
+  <!-- <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command=" if not exist &quot;$(SolutionDir)../../\Dlls&quot; mkdir &quot;$(SolutionDir)../../\Dlls&quot;&#xD;&#xA;      copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)../../\Dlls&quot;" />
+  </Target> -->
+
+</Project>
