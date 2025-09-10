@@ -33,7 +33,6 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
         }
 
         #region GUARDAR ARCHIVO
-
         [HttpPost("subirArchivo")]
         public async Task<IActionResult> UploadFile([FromForm] SLODocumentoDTO sloDocumentoDTO)
         {
@@ -55,8 +54,17 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
                 var nombreDocumentoUUID = $"{uuid}{extension}";
 
                 // 2. Buscar transporte asignado
+                int idSLOTransporteSolicitud = int.TryParse(sloDocumentoDTO.Identificador, out int n) ? n : 0;
+                if (idSLOTransporteSolicitud <= 0)
+                    return BadRequest(new RespuestaGenericaDTO
+                    {
+                        IsSuccess = false,
+                        strMensaje = "No se pudo obtener la solicitud del transportista.",
+                        StatusCode = System.Net.HttpStatusCode.BadRequest
+                    });
+
                 var transporte = await _context.sLOTransporteAsignados
-                    .FirstOrDefaultAsync(t => t.Placas == sloDocumentoDTO.Identificador);
+                    .FirstOrDefaultAsync(t => t.IdSLOTransporteSolicitud == idSLOTransporteSolicitud);
 
                 if (transporte == null)
                 {
@@ -93,7 +101,7 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
                 {
                     identificador = Path.Combine(
                         "TERRESTRE",
-                        sloDocumentoDTO.Identificador
+                        transporte.Placas
                     );
 
                     strPathCompleto = Path.Combine(
@@ -112,7 +120,7 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
                 }
                 else if (sloDocumentoDTO.TipoDocumento == "POD")
                 {
-                    
+
                     var transporteFolder = Path.Combine(
                         _basePath,
                         "EXPEDIENTE",
@@ -122,7 +130,7 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
                         acronimoLineaNegocio,
                         sloDocumentoDTO.IdOrden.ToString(),
                         "TERRESTRE",
-                        sloDocumentoDTO.Identificador
+                        transporte.Placas
                     );
 
                     if (!Directory.Exists(transporteFolder))
@@ -137,7 +145,7 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
 
                     identificador = Path.Combine(
                         "TERRESTRE",
-                        sloDocumentoDTO.Identificador,
+                        transporte.Placas,
                         "POD"
                     );
 
@@ -167,7 +175,7 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
                         acronimoLineaNegocio,
                         sloDocumentoDTO.IdOrden.ToString(),
                         "TERRESTRE",
-                        sloDocumentoDTO.Identificador
+                        transporte.Placas
                     );
 
                     if (!Directory.Exists(transporteFolder))
@@ -183,7 +191,7 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
 
                     identificador = Path.Combine(
                         "TERRESTRE",
-                        sloDocumentoDTO.Identificador,
+                        transporte.Placas,
                         "INCIDENCIA"
                     );
 
