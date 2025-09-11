@@ -549,5 +549,37 @@ namespace ALOG.Repositorios.Repositorio.Logistica
             }
             return respuesta;
         }
+
+        public async Task<RespuestaGenericaDTO> SLOSolicitudesDetalleObtener(int idSLOSolicitud)
+        {
+            RespuestaGenericaDTO respuesta = new();
+            List<SLOSolicitudesDetalle> lstDetalles = new();
+
+            try
+            {
+                lstDetalles = await _db.sloSolicitudesDetalle
+                .Include(d => d.catTipoMercancia)
+                .Include(d => d.catTipoIMO)
+                .Where(d => d.IdSLOSolicitud == idSLOSolicitud && d.Activo)
+                .ToListAsync();
+
+                respuesta.IsSuccess = true;
+                respuesta.strMensaje = "Consulta Exitosa";
+                respuesta.Entidades = lstDetalles.Cast<object>().ToList();
+                respuesta.StatusCode = HttpStatusCode.OK;
+                return respuesta;
+            }
+            catch (Exception ex)
+            {
+                respuesta.IsSuccess = false;
+                respuesta.StatusCode = HttpStatusCode.InternalServerError;
+                respuesta.lstrErrorMessages = new List<string>
+                {
+                    "Error al ejecutar la consulta",
+                    ex.InnerException?.Message ?? ex.Message
+                };
+                return respuesta;
+            }
+        }
     }
 }

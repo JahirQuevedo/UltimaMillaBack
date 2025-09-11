@@ -1,4 +1,5 @@
 ﻿using ALOG.Modelos.Modelos.Catalogos;
+using ALOG.Modelos.Modelos.DTO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ALOG.Modelos.Modelos.Logisticos
 {
-    public class SLOSolicitudesDetalles
+    public class SLOSolicitudesDetalles : IActivable
     {
         [Key]
         public int IdSLOSolicitudDet { get; set; }
@@ -67,5 +68,7 @@ namespace ALOG.Modelos.Modelos.Logisticos
         public virtual CatTipoIMO? catTipoIMO { get; set; }
 
         public virtual CatTipoEmbalajes catTipoEmbalajes { get; set; }
+        public bool Activo { get; set; }
+        public DateTime FechaRegistro { get; set; }
     }
 }

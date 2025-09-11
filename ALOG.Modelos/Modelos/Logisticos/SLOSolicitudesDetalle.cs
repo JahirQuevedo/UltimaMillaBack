@@ -69,10 +69,7 @@ namespace ALOG.Modelos.Modelos.Logisticos
 
         // Propiedades de navegación
         public virtual SLOSolicitudes catSLOSolicitudes { get; set;}
-        public virtual CatMercancias catTipoMercancia { get; set; }
-
-        
-
+        public virtual CatMercancias catTipoMercancia { get; set; }        
         public virtual CatTipoEmbalajes catTipoEmbalajes { get; set; }
         //public virtual CatTipoContenedor TipoContenedor { get; set; }
         //public virtual CatTipoEmbajale TipoEmbajale { get; set; } 

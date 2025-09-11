@@ -27,7 +27,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(
     opciones =>
     {
         //LOCAL
-        opciones.UseSqlServer(builder.Configuration.GetConnectionString("ConexionSql"));
+        opciones.UseSqlServer(builder.Configuration.GetConnectionString("ConexionSqlQAntonio"));
 
         //LOCALIIS
         //opciones.UseSqlServer(builder.Configuration.GetConnectionString("ConexionSqlIIS"));

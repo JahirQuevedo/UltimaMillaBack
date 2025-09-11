@@ -20,5 +20,6 @@ namespace ALOG.Repositorios.Repositorio.Logistica.ILogisticosRepositorio
         Task<RespuestaGenericaDTO> SLOSolicitudesBaja(int IdSolicitud);
         Task<RespuestaGenericaDTO> SLOSolicitudesAlta(int IdSolicitud);
         //Task<RespuestaGenericaDTO> ObtenerDetallesSolicitudSinAsignarAsync(int idSLOSolicitud);
+        Task<RespuestaGenericaDTO> SLOSolicitudesDetalleObtener(int idSLOSolicitud);
     }
 }

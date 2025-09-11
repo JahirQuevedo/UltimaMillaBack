@@ -49,9 +49,7 @@ namespace ALOG.APILogistico.Controllers.CtrlDTLogistico
         {
 
             entidad.IdCatTipoEstado = _context.catUsuariosEmpresa
-    .Any(u => u.IdCatUsuarios == entidad.IdCatUsuario && (u.idCatEmpresa == 1 || u.idCatEmpresa == 2))
-    ? 5
-    : 1;
+    .Any(u => u.IdCatUsuarios == entidad.IdCatUsuario && (u.idCatEmpresa == 1 || u.idCatEmpresa == 2)) ? 5 : 1;
 
 
             if (!ModelState.IsValid)
@@ -162,10 +160,11 @@ namespace ALOG.APILogistico.Controllers.CtrlDTLogistico
         //    }
         //}
 
-        [HttpPut("SolicitudesActualizar/{id}")]
-        public async Task<IActionResult> SLOSolicitudesActualizar([FromRoute] int id,[FromBody] SLOSolicitudes solicitud)
+        [HttpPut("SolicitudesActualizarSolicitud/{id}")]
+        public async Task<IActionResult> SLOSolicitudesActualizar(int id,[FromBody] SLOSolicitudes solicitud)
         {
             var respuesta = new RespuestaGenericaDTO();
+            
 
             if (!ModelState.IsValid)
             {
@@ -241,6 +240,16 @@ namespace ALOG.APILogistico.Controllers.CtrlDTLogistico
         #endregion SLO_SOLICITUDES
 
         #region SLO_SOLICITUDES_DETALLE
+        [HttpGet("SLOSolicitudesDetalleObtener/{id}")]
+        public async Task<IActionResult> SLOSolicitudesDetalleObtener(int id)
+        {
+            RespuestaGenericaDTO respuesta = await _solicitudesRepositorio.SLOSolicitudesDetalleObtener(id);
+
+            if(respuesta.IsSuccess)
+                return Ok(respuesta);
+            else
+                return StatusCode((int)respuesta.StatusCode, respuesta);
+        }
         #endregion SLO_SOLICITUDES_DETALLE
 
         #endregion SOLICITUDES_SERVICIOS

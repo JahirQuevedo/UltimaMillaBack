@@ -99,7 +99,7 @@ namespace ALOG.Repositorios.Data
         public DbSet<CatClientesUbicaciones> catClientesUbicaciones { get; set; }
         public DbSet<CatTipoOperacionComercio> catTipoOperacionComercio { get; set; }
         public DbSet<SLOSolicitudes> sloSolicitudes { get; set; }
-        public DbSet<SLOSolicitudesDetalles> sloSolicitudesDetalle { get; set; }
+        public DbSet<SLOSolicitudesDetalle> sloSolicitudesDetalle { get; set; }
         //public DbSet<SLODocumentoDTO> sloDocumentoDTO { get; set; }
         //public DbSet<CatCondicionPago> catCondicionesPago { get; set; }
         //public DbSet<CatBanco> catBancos { get; set; }
@@ -144,7 +144,7 @@ namespace ALOG.Repositorios.Data
         public DbSet<DtUltimaMillaEnc> dtUltimaMillaEnc { get; set; }
         public DbSet<DtUltimaMillaDet> dtUltimaMillaDet { get; set; }
         public DbSet<SLOSolicitudes> SLOSolicitudes { get; set; }
-        public DbSet<SLOSolicitudesDetalles> sLOSolicitudesDetalles { get; set; }
+        //public DbSet<SLOSolicitudesDetalles> sLOSolicitudesDetalles { get; set; }
         public DbSet<SLOTControlTerrestre> sloControlTerrestre { get; set; }
         public DbSet<SLOTransporteSolicitud> SLOTransporteSolicitudes { get; set; }
         public DbSet<SLOTransporteDetalle> SLOTransporteDetalles { get; set; }
