@@ -65,6 +65,7 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
 
                 var transporte = await _context.sLOTransporteAsignados
                     .FirstOrDefaultAsync(t => t.IdSLOTransporteSolicitud == idSLOTransporteSolicitud);
+                    
 
                 if (transporte == null)
                 {
@@ -135,12 +136,13 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
 
                     if (!Directory.Exists(transporteFolder))
                     {
-                        return NotFound(new RespuestaGenericaDTO
-                        {
-                            IsSuccess = false,
-                            strMensaje = "No se encontró la ruta del transporte asignado para guardar el POD.",
-                            StatusCode = System.Net.HttpStatusCode.NotFound
-                        });
+                        //return NotFound(new RespuestaGenericaDTO
+                        //{
+                        //    IsSuccess = false,
+                        //    strMensaje = "No se encontró la ruta del transporte asignado para guardar el POD.",
+                        //    StatusCode = System.Net.HttpStatusCode.NotFound
+                        //});
+                        Directory.CreateDirectory(transporteFolder);
                     }
 
                     identificador = Path.Combine(
