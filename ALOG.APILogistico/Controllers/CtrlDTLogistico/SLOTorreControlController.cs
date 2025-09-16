@@ -427,6 +427,58 @@ namespace ALOG.APILogistico.Controllers.CtrlDTLogistico
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        [HttpPatch("FinalizarTransporteSolicitud/{id}")]
+        public async Task<IActionResult> FinalizarTransporteSolicitud(int id)
+        {
+            // Buscar solicitud de transporte
+            var entity = await _context.SLOTransporteSolicitudes.FindAsync(id);
+            if (entity == null || !entity.Activo)
+                return NotFound();
+
+            // Id del estado "Terminado"
+            int idEstadoTerminado = await _context.catTipoEstados
+                .Where(e => e.TipoEstado == "T")
+                .Select(e => e.IdCatTipoEstados)
+                .FirstOrDefaultAsync();
+
+            // Finalizamos la solicitud de transporte actual
+            entity.IdCatTipoEstados = idEstadoTerminado;
+
+            // Buscar la solicitud de servicio relacionada
+            var solicitudServicio = await _context.sloSolicitudes.FindAsync(entity.IdSLOSolicitud);
+            if (solicitudServicio == null)
+                return NotFound();
+
+            //Buscamos la orden relacionada
+            var orden = await _context.ordenes.FindAsync(solicitudServicio.IdOrden);
+            if (orden == null)
+                return NotFound();
+
+            // Traer todas las solicitudes de transporte activas de este servicio
+            var solicitudesTransporte = await _context.SLOTransporteSolicitudes
+                .Where(st => st.IdSLOSolicitud == solicitudServicio.IdSLOSolicitud && st.Activo)
+                .ToListAsync();
+
+            // Verificar si TODAS las solicitudes de transporte están terminadas
+            bool todasTerminadas = solicitudesTransporte.All(st => st.IdCatTipoEstados == idEstadoTerminado);
+
+            if (todasTerminadas)
+            {
+                solicitudServicio.IdCatTipoEstado = idEstadoTerminado;
+                orden.IdEstadoOrden = idEstadoTerminado;
+            }
+            
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = todasTerminadas
+                    ? "Solicitud de servicio finalizada correctamente"
+                    : "Solicitud de transporte finalizada correctamente"
+            });
+        }
+
         #endregion TRANSPORTES_SOLICITUD
 
         #region TRANSPORTE_ASIGNADO
