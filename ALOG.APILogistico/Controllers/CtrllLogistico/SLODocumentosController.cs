@@ -364,15 +364,15 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
                 .Where(d => d.IdSLOTransporteSolicitud == idSLOTransporteSolicitud && d.Activo)
                 .ToListAsync();
 
-            if (documentos.Count == 0)
-            {
-                return NotFound(new RespuestaGenericaDTO
-                {
-                    IsSuccess = false,
-                    StatusCode = System.Net.HttpStatusCode.NotFound,
-                    strMensaje = "No se encontraron documentos para esta solicitud de transporte."
-                });
-            }
+            //if (documentos.Count == 0)
+            //{
+            //    return NotFound(new RespuestaGenericaDTO
+            //    {
+            //        IsSuccess = false,
+            //        StatusCode = System.Net.HttpStatusCode.NotFound,
+            //        strMensaje = "No se encontraron documentos para esta solicitud de transporte."
+            //    });
+            //}
 
             return Ok(new RespuestaGenericaDTO
             {

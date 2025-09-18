@@ -263,8 +263,9 @@ namespace ALOG.APILogistico.Controllers.CtrlDTLogistico
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            
             model.FechaRegistro = DateTime.Now;
-            model.Activo = true;
+            model.Activo = true;            
 
             _context.SLOTransporteDetalles.Add(model);
             await _context.SaveChangesAsync();
@@ -348,6 +349,8 @@ namespace ALOG.APILogistico.Controllers.CtrlDTLogistico
                 StatusCode = HttpStatusCode.BadRequest
             };
 
+            var enProceso = await _context.catTipoEstados.Where(e => e.TipoEstado == "P").Select(e => e.IdCatTipoEstados).FirstOrDefaultAsync();
+
             if (!ModelState.IsValid)
             {
                 respuesta.Entidad = ModelState;
@@ -358,7 +361,8 @@ namespace ALOG.APILogistico.Controllers.CtrlDTLogistico
             {
                 pSLOTransporteSolicitud.FechaRegistro = DateTime.Now;
                 pSLOTransporteSolicitud.Activo = true;
-                var solicitud = new SLOSolicitudes { IdSLOSolicitud = pSLOTransporteSolicitud.IdSLOSolicitud, IdCatTipoEstado = 2 };
+                pSLOTransporteSolicitud.IdCatTipoEstados = enProceso;
+                var solicitud = new SLOSolicitudes { IdSLOSolicitud = pSLOTransporteSolicitud.IdSLOSolicitud, IdCatTipoEstado = enProceso };
                 _context.sloSolicitudes.Attach(solicitud);
                 _context.Entry(solicitud).Property(e => e.IdCatTipoEstado).IsModified = true;
                 _context.SLOTransporteSolicitudes.Add(pSLOTransporteSolicitud);
