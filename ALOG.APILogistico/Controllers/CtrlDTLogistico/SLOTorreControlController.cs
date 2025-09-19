@@ -724,6 +724,8 @@ namespace ALOG.APILogistico.Controllers.CtrlDTLogistico
                     .Include(x => x.sloSolicitudes)
                     .ThenInclude(x => x.catClienteUbicacionDestino)
                     .ThenInclude(cud => cud.catPaisMunicipios)
+                    .Include(x => x.sloSolicitudes)
+                    .ThenInclude(x => x.catTipoOperComercio)
                     .Where(x => x.IdSLOSolicitud == id && x.Activo)
                     .ToListAsync();
 
