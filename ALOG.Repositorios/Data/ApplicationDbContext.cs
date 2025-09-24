@@ -96,10 +96,11 @@ namespace ALOG.Repositorios.Data
         public DbSet<CatTipoIncidenciaEvento> catTipoIncidenciaEvento { get; set; }
         public DbSet<CatTipoTransporte> catTipoTransporte { get; set; }
         public DbSet<CatMercancias> catMercancias { get; set; }
+        public DbSet<CatTipoOperacionesSLO> catOperacionesSLO { get; set; }
+        public DbSet<CatTipoOperacionesTransportes> catTipoOperacionesTransportes { get; set; }
         public DbSet<CatClientesUbicaciones> catClientesUbicaciones { get; set; }
         public DbSet<CatTipoOperacionComercio> catTipoOperacionComercio { get; set; }
-        public DbSet<SLOSolicitudes> sloSolicitudes { get; set; }
-        public DbSet<SLOSolicitudesDetalle> sloSolicitudesDetalle { get; set; }
+       
         //public DbSet<SLODocumentoDTO> sloDocumentoDTO { get; set; }
         //public DbSet<CatCondicionPago> catCondicionesPago { get; set; }
         //public DbSet<CatBanco> catBancos { get; set; }
@@ -117,6 +118,9 @@ namespace ALOG.Repositorios.Data
         public DbSet <SLOIntegracionReferencia> SLOintegracionReferencia { get; set; }
         public DbSet <SLOIntegraFacturaEnc> SLOintegracionFacturaEnc { get; set; }
         public DbSet <SLOIntegraFacturaDet> SLOintegracionFacturaDet { get; set; }
+        public DbSet<SLOSolicitudes> sloSolicitudes { get; set; }
+        public DbSet<SLOSolicitudesDetalle> sloSolicitudesDetalle { get; set; }
+        public DbSet<SLOTransporteCronDocumentos> sloTransporteCronDocumentos { get; set; }
 
 
         public DbSet<PeticionesContenedores> peticionesContenedores { get; set; }

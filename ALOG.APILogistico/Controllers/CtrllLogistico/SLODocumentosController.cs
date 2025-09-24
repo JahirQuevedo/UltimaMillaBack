@@ -263,7 +263,8 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
                         documento.DocumentoUUID,
                         documento.NombreDocumento,
                         documento.TipoArchivo,
-                        documento.Ubicacion
+                        documento.Ubicacion,
+                        documento.IdSLOSolicitudDocumentos
                     }
                 });
             }

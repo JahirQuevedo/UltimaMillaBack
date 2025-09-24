@@ -225,6 +225,7 @@ namespace ALOG.Repositorios.Repositorio.Logistica
                 .Include(a => a.catTipoEstado)
                 .Include(c => c.TipoCarga)
                 .Include(o => o.Orden)
+                .Include(t => t.catTipoOperComercio)
 
                 .Include(u => u.catClienteUbicacionOrigen).ThenInclude(cuo => cuo.catPaises)
                 .Include(u => u.catClienteUbicacionOrigen).ThenInclude(cuo => cuo.catPaisEstados)

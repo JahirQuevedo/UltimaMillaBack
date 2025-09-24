@@ -45,9 +45,9 @@ namespace ALOG.Modelos.Modelos.Logisticos
         [MaxLength(50)]
         public string? CAAT { get; set; }
 
-        [ForeignKey("catTipoTransporte")]
-        public int IdCatTipoTransporte { get; set; }
-        public virtual CatTipoTransporte catTipoTransporte { get; set; }        
+        [ForeignKey("catTipoOperacionesTransportes")]
+        public int IdCatTipoOperTransportes { get; set; }
+        public virtual CatTipoOperacionesTransportes catTipoOperacionesTransportes { get; set; }        
         public ICollection<SLOTransporteDetalle> sloTransporteDetalle { get; set; }        
     }
 }

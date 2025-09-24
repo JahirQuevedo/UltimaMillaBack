@@ -304,7 +304,7 @@ namespace ALOG.APILogistico.Controllers.CtrlDTLogistico
                 return NotFound();
 
             entity.IdCatTipoEstados = model.IdCatTipoEstados;
-            entity.IdCatTipoTransporte = model.IdCatTipoTransporte;
+            entity.IdCatTipoOperTransportes = model.IdCatTipoOperTransportes;
             entity.IdSLOTransporteSolicitud = model.IdSLOTransporteSolicitud;
             entity.FolioUUID = model.FolioUUID;
             entity.IdCatUsuarios = model.IdCatUsuarios;
@@ -386,7 +386,11 @@ namespace ALOG.APILogistico.Controllers.CtrlDTLogistico
         [HttpGet("ObtenerTransporteSolicitud/{id}")]
         public async Task<IActionResult> ObtenerTransporteSolicitud(int id)
         {
-            var entity = await _context.SLOTransporteSolicitudes.FindAsync(id);
+            var entity = await _context.SLOTransporteSolicitudes
+                .Include(st => st.catTipoOperacionesTransportes).ThenInclude(st => st.catTipoOperacionesSLO)
+                .Include(st => st.catTipoOperacionesTransportes).ThenInclude(st => st.catTipoTransporte).Where(st => st.IdSLOTransporteSolicitud == id)
+                .FirstOrDefaultAsync();
+
             if (entity == null || !entity.Activo)
                 return NotFound();
             return Ok(entity);
@@ -403,6 +407,7 @@ namespace ALOG.APILogistico.Controllers.CtrlDTLogistico
             entity.IdCatTipoEstados = pSLOTransporteSolicitud.IdCatTipoEstados;
             entity.IdCatUsuarios = pSLOTransporteSolicitud.IdCatUsuarios;
             entity.CAAT = pSLOTransporteSolicitud.CAAT;
+            entity.IdCatTipoOperTransportes = pSLOTransporteSolicitud.IdCatTipoOperTransportes;
 
             await _context.SaveChangesAsync();
             return NoContent();
@@ -531,7 +536,7 @@ namespace ALOG.APILogistico.Controllers.CtrlDTLogistico
                 return NotFound();
 
             entity.IdSLOTransporteDetalle = pSLOTransporteAsignado.IdSLOTransporteDetalle;
-            entity.IdCatTipoTransporte = pSLOTransporteAsignado.IdCatTipoTransporte;
+            entity.IdCatTipoOperTransportes = pSLOTransporteAsignado.IdCatTipoOperTransportes;
             entity.Placas = pSLOTransporteAsignado.Placas;
             entity.Economico = pSLOTransporteAsignado.Economico;
             entity.Operador = pSLOTransporteAsignado.Operador;
@@ -577,16 +582,44 @@ namespace ALOG.APILogistico.Controllers.CtrlDTLogistico
         [HttpPost("CrearTransporteCron")]
         public async Task<IActionResult> CrearTransporteCron([FromBody] SLOTransportesCron model)
         {
+            RespuestaGenericaDTO respuestaGenericaDTO = new();
+
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             model.FechaRegistro = DateTime.Now;
             model.Activo = true;
 
-            _context.SLOTransportesCron.Add(model);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.SLOTransportesCron.Add(model);
+                var response = await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(ObtenerPorIDTransporteCron), new { id = model.IdSLOTransporteCron }, model);
+                if(response > 0)
+                {
+                    respuestaGenericaDTO.IsSuccess = true;
+                    respuestaGenericaDTO.strMensaje = "Eventualidad creada correctamente";
+                    respuestaGenericaDTO.Entidad = model;
+
+                    return Ok(respuestaGenericaDTO);
+                }
+                else
+                {
+                    respuestaGenericaDTO.IsSuccess = false;
+                    respuestaGenericaDTO.strMensaje = "No se creó la eventualidad debido a un error inesperado";
+
+                    return BadRequest(respuestaGenericaDTO);
+                }
+            } catch (Exception ex)
+            {
+                respuestaGenericaDTO.lstrErrorMessages = new List<string>
+                {
+                    $"Error al crear la solicitud: {ex.InnerException}"
+                };
+                respuestaGenericaDTO.IsSuccess = false;
+
+                return BadRequest(respuestaGenericaDTO);
+            }                      
         }
 
         [HttpGet("ObtenerPorIDTransporteCron/{id}")]
@@ -656,6 +689,74 @@ namespace ALOG.APILogistico.Controllers.CtrlDTLogistico
             entity.Activo = true;
             await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+        [HttpPost("CrearTransporteCronDocumentos")]
+        public async Task<IActionResult> CrearTransporteCronDocumentos([FromBody] List<SLOTransporteCronDocumentos> lstsloCronDocumentos)
+        {
+            var respuestaGenericaDTO = new RespuestaGenericaDTO();
+
+            //if (!ModelState.IsValid)
+            //    return BadRequest(ModelState);
+
+            try
+            {
+                // Configurar valores por defecto en todos los registros
+                //foreach (var doc in lstsloCronDocumentos)
+                //{
+                //    doc.FechaRegistro = DateTime.Now;
+                //    doc.Activo = true;
+                //}
+
+                // Guardar en lote
+                await _context.sloTransporteCronDocumentos.AddRangeAsync(lstsloCronDocumentos);
+                var response = await _context.SaveChangesAsync();
+
+                if (response > 0) // ✅ SaveChangesAsync devuelve la cantidad de filas afectadas
+                {
+                    respuestaGenericaDTO.IsSuccess = true;
+                    respuestaGenericaDTO.strMensaje = "Documentos de eventualidad asignados correctamente";
+                    respuestaGenericaDTO.Entidades = lstsloCronDocumentos.Cast<object>().ToList(); // como tu DTO usa object
+                    return Ok(respuestaGenericaDTO);
+                }
+                else
+                {
+                    respuestaGenericaDTO.IsSuccess = false;
+                    respuestaGenericaDTO.strMensaje = "No se creó la asignación de documentos de eventualidad debido a un error inesperado";
+                    return BadRequest(respuestaGenericaDTO);
+                }
+            }
+            catch (Exception ex)
+            {
+                respuestaGenericaDTO.lstrErrorMessages = new List<string>
+        {
+            $"Error al crear la asignación de documentos de eventualidad: {ex.InnerException?.Message ?? ex.Message}"
+        };
+                respuestaGenericaDTO.IsSuccess = false;
+
+                return BadRequest(respuestaGenericaDTO);
+            }
+        }
+
+        [HttpGet("ObtenerTransporteCronDocumentos/{idTransporteCron}")]
+        public async Task<IActionResult> ObtenerTransporteCronDocumentos(int idTransporteCron)
+        {
+            RespuestaGenericaDTO respuestaGenericaDTO = new RespuestaGenericaDTO();
+            try
+            {
+                var lstTransporteCronDocumentos = await _context.sloTransporteCronDocumentos           
+                   .Where(dc => dc.IdSLOTransporteCron == idTransporteCron).ToListAsync();
+
+                respuestaGenericaDTO.IsSuccess = true;
+                respuestaGenericaDTO.Entidades = lstTransporteCronDocumentos.Cast<object>().ToList();
+                return Ok(respuestaGenericaDTO);
+
+            } catch (Exception ex)            
+            {
+                respuestaGenericaDTO.IsSuccess  = false;
+                respuestaGenericaDTO.lstrErrorMessages.Add(ex.Message);
+                return BadRequest(respuestaGenericaDTO);
+            }
         }
         #endregion TRANSPORTE_EVENTOS
 

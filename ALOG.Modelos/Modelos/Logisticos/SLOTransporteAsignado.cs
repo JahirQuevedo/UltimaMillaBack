@@ -17,8 +17,8 @@ namespace ALOG.Modelos.Modelos.Logisticos
         public int? IdSLOTransporteDetalle { get; set; }
 
         [Required]
-        [ForeignKey(nameof(catTipoTransporte))]
-        public int IdCatTipoTransporte { get; set; }
+        [ForeignKey(nameof(catTipoOperTransportes))]
+        public int IdCatTipoOperTransportes { get; set; }
 
         [Required]
         [MaxLength(10)]
@@ -53,7 +53,7 @@ namespace ALOG.Modelos.Modelos.Logisticos
         public List<SLOTransporteAsignadoDetalle> sloTransporteAsignadoDetalle { get; set; }
         // Relaciones de navegación
 
-        public virtual CatTipoTransporte catTipoTransporte { get; set; }
+        public virtual CatTipoOperacionesTransportes catTipoOperTransportes { get; set; }
 
         public virtual SLOTransporteDetalle sloTransporteDetalle { get; set; }
 
