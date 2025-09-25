@@ -47,12 +47,16 @@ namespace ALOG.APILogistico.Controllers.CtrlDTLogistico
         [HttpPost("SolicitudesCrear")]
         public async Task<IActionResult> SLOSolicitudesCrear([FromBody] SLOSolicitudes entidad)
         {
+            int idEmpresaALO = _context.catEmpresas.Where(e => e.Acronimo == "ALO").Select(e => e.IdCatEmpresa).FirstOrDefault();
+            int idEmpresaINCOM =_context.catEmpresas.Where(e => e.Acronimo == "INCOM").Select(e => e.IdCatEmpresa).FirstOrDefault();
+            int idCatEstadoAbierto = _context.catTipoEstados.Where(te => te.TipoEstado == "A").Select(te => te.IdCatTipoEstados).FirstOrDefault();
+            int idCatEstadoPendiente = _context.catTipoEstados.Where(te => te.TipoEstado == "PE").Select(te => te.IdCatTipoEstados).FirstOrDefault();
 
             entidad.IdCatTipoEstado = _context.catUsuariosEmpresa
     .Any(u => u.IdCatUsuarios == entidad.IdCatUsuario &&
-              (u.idCatEmpresa == 1 || u.idCatEmpresa == 2))
-    ? 1   // sí pertenece a alguna → estado 1
-    : 5;  // no pertenece a ninguna → estado 5
+              (u.idCatEmpresa == idEmpresaALO || u.idCatEmpresa == idEmpresaINCOM))
+    ? idCatEstadoAbierto   // sí pertenece a alguna → estado 1
+    : idCatEstadoPendiente;  // no pertenece a ninguna → estado 5
 
 
             if (!ModelState.IsValid)
