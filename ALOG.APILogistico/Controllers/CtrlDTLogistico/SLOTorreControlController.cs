@@ -49,7 +49,10 @@ namespace ALOG.APILogistico.Controllers.CtrlDTLogistico
         {
 
             entidad.IdCatTipoEstado = _context.catUsuariosEmpresa
-    .Any(u => u.IdCatUsuarios == entidad.IdCatUsuario && (u.idCatEmpresa == 1 || u.idCatEmpresa == 2)) ? 5 : 1;
+    .Any(u => u.IdCatUsuarios == entidad.IdCatUsuario &&
+              (u.idCatEmpresa == 1 || u.idCatEmpresa == 2))
+    ? 1   // sí pertenece a alguna → estado 1
+    : 5;  // no pertenece a ninguna → estado 5
 
 
             if (!ModelState.IsValid)
