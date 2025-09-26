@@ -257,6 +257,8 @@ namespace ALOG.APILogistico.Controllers.CtrlDTLogistico
             else
                 return StatusCode((int)respuesta.StatusCode, respuesta);
         }
+
+
         #endregion SLO_SOLICITUDES_DETALLE
 
         #endregion SOLICITUDES_SERVICIOS
@@ -462,7 +464,10 @@ namespace ALOG.APILogistico.Controllers.CtrlDTLogistico
             entity.IdCatTipoEstados = idEstadoTerminado;
 
             // Buscar la solicitud de servicio relacionada
-            var solicitudServicio = await _context.sloSolicitudes.FindAsync(entity.IdSLOSolicitud);
+            var solicitudServicio = await _context.sloSolicitudes
+            .Include(s => s.sloSOlicitudesDetalle)
+            .FirstOrDefaultAsync(s => s.IdSLOSolicitud == entity.IdSLOSolicitud);
+
             if (solicitudServicio == null)
                 return NotFound();
 
@@ -476,8 +481,21 @@ namespace ALOG.APILogistico.Controllers.CtrlDTLogistico
                 .Where(st => st.IdSLOSolicitud == solicitudServicio.IdSLOSolicitud && st.Activo)
                 .ToListAsync();
 
-            // Verificar si TODAS las solicitudes de transporte están terminadas
-            bool todasTerminadas = solicitudesTransporte.All(st => st.IdCatTipoEstados == idEstadoTerminado);
+            // Mercancías pendientes de asignar
+            bool existenPendientes = solicitudServicio.sloSOlicitudesDetalle
+                .Any(sd =>
+                    sd.Activo &&
+                    !_context.SLOTransporteDetalles.Any(td =>
+                        td.Activo &&
+                        td.IdSLOSolicitudDet == sd.IdSLOSolicitudDet &&
+                        _context.SLOTransporteSolicitudes.Any(ts =>
+                            ts.Activo &&
+                            ts.IdSLOTransporteSolicitud == td.IdSLOTransporteSolicitud))
+                );
+
+            // Si no hay pendientes Y todos los transportes están terminados → cerrar orden
+            bool todasTerminadas = solicitudesTransporte.All(st => st.IdCatTipoEstados == idEstadoTerminado)
+                                   && !existenPendientes;
 
             if (todasTerminadas)
             {

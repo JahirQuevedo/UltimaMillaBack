@@ -344,8 +344,23 @@ namespace ALOG.Repositorios.Repositorio.Logistica
             try
             {
                 var solicitud = await _db.SLOSolicitudes
-                    .Include(s => s.sloSOlicitudesDetalle)
-                    .FirstOrDefaultAsync(s => s.IdSLOSolicitud == IdSolicitud);
+                // ===== Includes del padre =====
+                .Include(a => a.Cliente)
+                .Include(a => a.catUsuario)
+                .Include(a => a.catTipoEstado)
+                .Include(c => c.TipoCarga)
+                .Include(o => o.Orden)
+                .Include(t => t.catTipoOperComercio)
+
+                .Include(u => u.catClienteUbicacionOrigen).ThenInclude(cuo => cuo.catPaises)
+                .Include(u => u.catClienteUbicacionOrigen).ThenInclude(cuo => cuo.catPaisEstados)
+                .Include(u => u.catClienteUbicacionOrigen).ThenInclude(cuo => cuo.catPaisMunicipios)
+
+                .Include(u => u.catClienteUbicacionDestino).ThenInclude(cud => cud.catPaises)
+                .Include(u => u.catClienteUbicacionDestino).ThenInclude(cud => cud.catPaisEstados)
+                .Include(u => u.catClienteUbicacionDestino).ThenInclude(cud => cud.catPaisMunicipios)
+                .Include(o => o.catTipoOperacion)
+                .FirstOrDefaultAsync(s => s.IdSLOSolicitud == IdSolicitud);
 
                 if (solicitud == null)
                 {
