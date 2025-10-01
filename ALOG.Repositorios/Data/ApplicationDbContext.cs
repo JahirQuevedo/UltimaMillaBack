@@ -45,6 +45,7 @@ namespace ALOG.Repositorios.Data
         public DbSet<CatFormatoReferencias> catFormatoReferencias { get; set; }
         public DbSet<CatFormatoRefDet> catFormatoRefDets { get; set; }
         public DbSet<CatLineaNegocio> catLineaNegocio { get; set; }
+        public DbSet<CatDocumentosLNegocio> catDocumentosLNegocios { get;set; }
         public DbSet<CatLineaNegocioTarifa> catLineaNegocioTarifas { get; set; }
         public DbSet<CatLineaNegocioTariPrecio> catLineaNegocioTariPrecios { get; set; }
         public DbSet<CatNavieras> catNavieras { get; set; }

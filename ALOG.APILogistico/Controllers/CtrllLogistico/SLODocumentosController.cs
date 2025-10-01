@@ -1,4 +1,5 @@
-﻿using ALOG.Modelos.Modelos.DTO.Logistica;
+﻿using ALOG.Modelos.Modelos.DTO.Consultas;
+using ALOG.Modelos.Modelos.DTO.Logistica;
 using ALOG.Modelos.Modelos.DTO.Respuestas;
 using ALOG.Modelos.Modelos.DTO.Solicitudes;
 using ALOG.Modelos.Modelos.Logisticos;
@@ -36,6 +37,10 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
         [HttpPost("subirArchivo")]
         public async Task<IActionResult> UploadFile([FromForm] SLODocumentoDTO sloDocumentoDTO)
         {
+
+            RespuestaGenericaDTO respuestaGenericaDTO = new RespuestaGenericaDTO();
+            SLOTransporteAsignado transporte = new SLOTransporteAsignado();
+
             if (sloDocumentoDTO.File == null || sloDocumentoDTO.File.Length == 0)
             {
                 return BadRequest(new RespuestaGenericaDTO
@@ -56,26 +61,23 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
                 // 2. Buscar transporte asignado
                 int idSLOTransporteSolicitud = int.TryParse(sloDocumentoDTO.Identificador, out int n) ? n : 0;
                 if (idSLOTransporteSolicitud <= 0)
-                    return BadRequest(new RespuestaGenericaDTO
-                    {
-                        IsSuccess = false,
-                        strMensaje = "No se pudo obtener la solicitud del transportista.",
-                        StatusCode = System.Net.HttpStatusCode.BadRequest
-                    });
-
-                var transporte = await _context.sLOTransporteAsignados
-                    .FirstOrDefaultAsync(t => t.IdSLOTransporteSolicitud == idSLOTransporteSolicitud);
-                    
-
-                if (transporte == null)
                 {
-                    return NotFound(new RespuestaGenericaDTO
+                    respuestaGenericaDTO.IsSuccess = false;
+                    respuestaGenericaDTO.lstrErrorMessages.Add("No se pudo obtener la solicitud del transportista.");
+                    respuestaGenericaDTO.StatusCode = System.Net.HttpStatusCode.BadRequest;
+                }else if(idSLOTransporteSolicitud > 0)
+                {
+                    transporte = await _context.sLOTransporteAsignados
+                        .FirstOrDefaultAsync(t => t.IdSLOTransporteSolicitud == idSLOTransporteSolicitud);
+
+
+                    if (transporte.IdSLOTransporteAsignado <= 0)
                     {
-                        IsSuccess = false,
-                        strMensaje = "No se encontró el transporte asignado para el servicio.",
-                        StatusCode = System.Net.HttpStatusCode.NotFound
-                    });
-                }
+                        respuestaGenericaDTO.IsSuccess = false;
+                        respuestaGenericaDTO.lstrErrorMessages.Add("No se encontró el transporte asignado para el servicio.");
+                        respuestaGenericaDTO.StatusCode = System.Net.HttpStatusCode.NotFound;
+                    }
+                }                    
 
                 // 3. Obtener IdCatDocumento dinámicamente
                 var catDocumento = await _context.catDocumento
@@ -84,12 +86,10 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
 
                 if (catDocumento == null)
                 {
-                    return BadRequest(new RespuestaGenericaDTO
-                    {
-                        IsSuccess = false,
-                        strMensaje = $"No se encontró un documento con el acrónimo {sloDocumentoDTO.TipoDocumento}.",
-                        StatusCode = System.Net.HttpStatusCode.BadRequest
-                    });
+
+                    respuestaGenericaDTO.IsSuccess = false;
+                    respuestaGenericaDTO.lstrErrorMessages.Add($"No se encontró un documento con el acrónimo {sloDocumentoDTO.TipoDocumento}.");                        
+                    
                 }
 
                 // 4. Definir ruta de guardado
@@ -98,7 +98,7 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
                 string identificador = "";
                 string strPathCompleto = "";
 
-                if (sloDocumentoDTO.TipoDocumento == "CARTAPORTE")
+                if (sloDocumentoDTO.TipoDocumento == "CARTAPORTE" && transporte.IdSLOTransporteAsignado > 0)
                 {
                     identificador = Path.Combine(
                         "TERRESTRE",
@@ -119,7 +119,7 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
                     if (!Directory.Exists(strPathCompleto))
                         Directory.CreateDirectory(strPathCompleto);
                 }
-                else if (sloDocumentoDTO.TipoDocumento == "POD")
+                else if (sloDocumentoDTO.TipoDocumento == "POD" && transporte.IdSLOTransporteAsignado > 0)
                 {
 
                     var transporteFolder = Path.Combine(
@@ -165,7 +165,7 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
                     if (!Directory.Exists(strPathCompleto))
                         Directory.CreateDirectory(strPathCompleto);
                 }
-                else if (sloDocumentoDTO.TipoDocumento == "INCIDENCIA")
+                else if (sloDocumentoDTO.TipoDocumento == "INCIDENCIA" && transporte.IdSLOTransporteAsignado > 0)
                 {
                     // Ruta base del transporte asignado
                     var transporteFolder = Path.Combine(
@@ -213,12 +213,21 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
                 }
                 else
                 {
-                    return BadRequest(new RespuestaGenericaDTO
+                    //Si es un documento general
+                    strPathCompleto = Path.Combine(
+                        _basePath,
+                        "EXPEDIENTE",
+                        fecha.Year.ToString(),
+                        fecha.Month.ToString("D2"),
+                        fecha.Day.ToString("D2"),
+                        acronimoLineaNegocio,
+                        sloDocumentoDTO.IdOrden.ToString()                        
+                    );
+
+                    if(!Directory.Exists(strPathCompleto))
                     {
-                        IsSuccess = false,
-                        strMensaje = "Tipo de documento no soportado.",
-                        StatusCode = System.Net.HttpStatusCode.BadRequest
-                    });
+                        Directory.CreateDirectory(strPathCompleto);
+                    }
                 }
 
                 // 5. Ruta completa del archivo
@@ -238,9 +247,7 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
                     Ubicacion = filePath,
                     TipoArchivo = sloDocumentoDTO.File.ContentType,
                     IdCatUsuarios = sloDocumentoDTO.IdUsuario,
-                    IdCatDocumento = catDocumento.IdCatDocumento,
-                    IdSLOTransporteDetalle = transporte.IdSLOTransporteDetalle,
-                    IdSLOTransporteSolicitud = transporte.IdSLOTransporteSolicitud,
+                    IdCatDocumento = catDocumento.IdCatDocumento,                    
                     IdSLOSolicitud = _context.sloSolicitudes
                                         .Where(s => s.IdOrden == sloDocumentoDTO.IdOrden)
                                         .Select(s => s.IdSLOSolicitud)
@@ -249,33 +256,37 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
                     Activo = true
                 };
 
+                if(transporte.IdSLOTransporteAsignado > 0)
+                {
+                    documento.IdSLOTransporteDetalle = transporte.IdSLOTransporteDetalle;
+                    documento.IdSLOTransporteSolicitud = transporte.IdSLOTransporteSolicitud;
+                }
+                    
+
                 _context.sloSolicitudesDocumentos.Add(documento);
                 await _context.SaveChangesAsync();
 
                 // 8. Respuesta
-                return Ok(new RespuestaGenericaDTO
+                respuestaGenericaDTO.IsSuccess = true;
+                respuestaGenericaDTO.strMensaje = "Archivo subido y registrado correctamente.";
+                respuestaGenericaDTO.StatusCode = System.Net.HttpStatusCode.OK;
+                respuestaGenericaDTO.Entidad = new
                 {
-                    IsSuccess = true,
-                    strMensaje = "Archivo subido y registrado correctamente.",
-                    StatusCode = System.Net.HttpStatusCode.OK,
-                    Entidad = new
-                    {
-                        documento.DocumentoUUID,
-                        documento.NombreDocumento,
-                        documento.TipoArchivo,
-                        documento.Ubicacion,
-                        documento.IdSLOSolicitudDocumentos
-                    }
-                });
+                    documento.DocumentoUUID,
+                    documento.NombreDocumento,
+                    documento.TipoArchivo,
+                    documento.Ubicacion,
+                    documento.IdSLOSolicitudDocumentos
+                };
+                return Ok(respuestaGenericaDTO);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new RespuestaGenericaDTO
-                {
-                    IsSuccess = false,
-                    strMensaje = $"Error al subir documento: {ex.InnerException?.Message ?? ex.Message}",
-                    StatusCode = System.Net.HttpStatusCode.InternalServerError
-                });
+                respuestaGenericaDTO.lstrErrorMessages.Add(ex.Message);
+                respuestaGenericaDTO.strMensaje = "Error al subir el archivo.";
+                respuestaGenericaDTO.StatusCode = System.Net.HttpStatusCode.InternalServerError;
+
+                return StatusCode(500, respuestaGenericaDTO);
             }
         }
 
@@ -347,10 +358,12 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
         //    }
         //}
 
-        [HttpGet("listarArchivo/{idSLOTransporteSolicitud:int}")]
-        public async Task<IActionResult> ListFiles(int idSLOTransporteSolicitud)
+        [HttpPost("listarArchivo")]
+        public async Task<IActionResult> ListFiles([FromBody] FiltroGenericoDTO filtroGenericoDTO)
         {
-            if (idSLOTransporteSolicitud <= 0)
+            var IdSolicitud = filtroGenericoDTO.Id;
+            var IdTransporteSolicitud = filtroGenericoDTO.IdTipoDocumento;
+            if (filtroGenericoDTO.Id <= 0)
             {
                 return BadRequest(new RespuestaGenericaDTO
                 {
@@ -360,10 +373,30 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
                 });
             }
 
+            //var documentos = await _context.sloSolicitudesDocumentos
+            //    .Include(s => s.catDocumentos)
+            //    .Where(d => d.IdSLOTransporteSolicitud == filtroGenericoDTO.Id && d.Activo && d.IdSLOTransporteSolicitud != null)
+            //    .ToListAsync();
+
+            //var algo = await _context.sloSolicitudesDocumentos
+            //        .Include(s => s.sloSolicitudes)
+            //            .ThenInclude(s => s.Orden)
+            //    .Where(d => d.IdSLOSolicitud == IdSolicitud && (d.IdSLOTransporteSolicitud == IdTransporteSolicitud || d.IdSLOTransporteSolicitud is )).ToListAsync();
+
             var documentos = await _context.sloSolicitudesDocumentos
                 .Include(s => s.catDocumentos)
-                .Where(d => d.IdSLOTransporteSolicitud == idSLOTransporteSolicitud && d.Activo)
-                .ToListAsync();
+                .Where(d => d.IdSLOSolicitud == IdSolicitud &&
+                        (IdTransporteSolicitud == null
+                    ? d.IdSLOTransporteSolicitud == null
+                    : d.IdSLOTransporteSolicitud == IdTransporteSolicitud)
+                    && d.Activo)
+                    .ToListAsync();
+
+
+            //var documentos = await _context.sloSolicitudesDocumentos
+            //    .Include(s => s.catDocumentos)
+            //    .Where(d => d.IdSLOTransporteSolicitud == idSLOTransporteSolicitud && d.Activo && d.IdSLOTransporteSolicitud != null)
+            //    .ToListAsync();
 
             //if (documentos.Count == 0)
             //{
@@ -384,6 +417,31 @@ namespace ALOG.APILogistico.Controllers.CtrllLogistico
             });
         }
 
+        [HttpGet("listarArchivoSolicitud/{idSolicitud}")]
+        public async Task<IActionResult> listarArchivoSolicitud(int idSolicitud)
+        {
+            RespuestaGenericaDTO respuestaGenericaDTO = new RespuestaGenericaDTO();
+            if (idSolicitud <= 0)
+            {
+                respuestaGenericaDTO.IsSuccess = false;
+                respuestaGenericaDTO.strMensaje = "No se proporcionó un IdSLOSolicitud valido.";
+                respuestaGenericaDTO.StatusCode = System.Net.HttpStatusCode.BadRequest;
+                return BadRequest(respuestaGenericaDTO);
+            }
+            else
+            {
+                var documentos = await _context.sloSolicitudesDocumentos
+                    .Include(s => s.catDocumentos)
+                    .Where(d => d.IdSLOSolicitud == idSolicitud && d.Activo && d.IdSLOTransporteSolicitud == null)
+                    .ToListAsync();
+
+                respuestaGenericaDTO.IsSuccess = true;
+                respuestaGenericaDTO.strMensaje = "Documentos obtenidos correctamente.";
+                respuestaGenericaDTO.StatusCode = System.Net.HttpStatusCode.OK;
+                respuestaGenericaDTO.Entidad = documentos;
+                return Ok(respuestaGenericaDTO);
+            }
+        }
         #endregion
 
         #region OBTENER ARCHIVO

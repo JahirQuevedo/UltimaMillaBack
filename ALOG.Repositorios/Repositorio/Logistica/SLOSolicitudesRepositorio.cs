@@ -82,6 +82,7 @@ namespace ALOG.Repositorios.Repositorio.Logistica
                             respuestaGenericaDTO.IsSuccess = true;
                             respuestaGenericaDTO.StatusCode = HttpStatusCode.OK;
                             respuestaGenericaDTO.strMensaje = "Solicitud creada correctamente";
+                            respuestaGenericaDTO.Entidad = solicitud; 
                             return respuestaGenericaDTO;
                         }
                         else
